@@ -1,0 +1,15 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="50dp"
+    android:layout_height="50dp"
+    android:background="@android:color/transparent">
+
+    <!-- Imagem do cursor -->
+    <ImageView
+        android:id="@+id/cursor_image"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:src="@drawable/cursor_circle"
+        android:backgroundTint="@android:color/holo_blue_light"
+        android:contentDescription="@null"
+        android:importantForAccessibility="no" />
+</RelativeLayout>

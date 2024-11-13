@@ -5,6 +5,8 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.util.Log
+import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -15,8 +17,16 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import com.example.eyeteractive.ui.theme.EyeteractiveTheme
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.Preview
+import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
 
 class MainActivity : ComponentActivity() {
 
@@ -30,38 +40,30 @@ class MainActivity : ComponentActivity() {
 
         // Verifica se a permissão de sobreposição foi concedida
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
-            // Solicita a permissão se necessário
             val intent = Intent(
                 Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                 Uri.parse("package:$packageName")
             )
             startActivityForResult(intent, REQUEST_CODE_DRAW_OVERLAY)
         } else {
-            // Inicia o serviço se a permissão já foi concedida
             iniciarCursorService()
         }
 
         setContent {
             EyeteractiveTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                    CameraPreview(modifier = Modifier.padding(innerPadding))
                 }
             }
         }
     }
 
-    // Verifica o resultado da solicitação de permissão
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_CODE_DRAW_OVERLAY) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Settings.canDrawOverlays(this)) {
-                // Permissão concedida, inicia o serviço
                 iniciarCursorService()
             } else {
-                // Exibe mensagem se a permissão foi negada
                 Toast.makeText(this, "Permissão necessária para desenhar sobre outros aplicativos", Toast.LENGTH_SHORT).show()
             }
         }
@@ -74,17 +76,42 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
+fun CameraPreview(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val cameraProviderFuture = remember { ProcessCameraProvider.getInstance(context) }
+
+    AndroidView(
+        factory = { ctx ->
+            val previewView = PreviewView(ctx).apply {
+                layoutParams = ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    ViewGroup.LayoutParams.MATCH_PARENT
+                )
+            }
+
+            cameraProviderFuture.addListener({
+                val cameraProvider = cameraProviderFuture.get()
+                val preview = Preview.Builder().build().also {
+                    it.setSurfaceProvider(previewView.surfaceProvider)
+                }
+
+                val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+
+                try {
+                    cameraProvider.unbindAll()
+                    cameraProvider.bindToLifecycle(
+                        lifecycleOwner,
+                        cameraSelector,
+                        preview
+                    )
+                } catch (e: Exception) {
+                    Log.e("CameraPreview", "Erro ao iniciar a câmera: ${e.message}")
+                }
+            }, ContextCompat.getMainExecutor(ctx))
+
+            previewView
+        },
         modifier = modifier
     )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    EyeteractiveTheme {
-        Greeting("Android")
-    }
 }

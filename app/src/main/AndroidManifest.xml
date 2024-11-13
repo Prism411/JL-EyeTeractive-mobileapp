@@ -4,6 +4,10 @@
 
     <!-- Permissões necessárias -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+    <uses-feature android:name="android.hardware.camera" android:required="true" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+
 
     <application
         android:allowBackup="true"

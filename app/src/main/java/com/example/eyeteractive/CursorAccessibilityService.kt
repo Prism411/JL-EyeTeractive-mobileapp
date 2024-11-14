@@ -92,4 +92,6 @@ class CursorAccessibilityService : AccessibilityService() {
             Log.e("CursorService", "Failed to remove cursor view: ${e.message}")
         }
     }
+
+
 }

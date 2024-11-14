@@ -1,9 +1,11 @@
 package com.example.eyeteractive
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
 import android.provider.Settings
 import android.util.Log
 import android.view.ViewGroup
@@ -27,6 +29,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
 
@@ -37,13 +43,14 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
+        iniciarCameraWorker()
         // Verifica se a permissão de sobreposição foi concedida
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
             val intent = Intent(
                 Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                 Uri.parse("package:$packageName")
             )
+            solicitarPermissaoBatteryOptimization()
             startActivityForResult(intent, REQUEST_CODE_DRAW_OVERLAY)
         } else {
             iniciarCursorService()
@@ -73,7 +80,28 @@ class MainActivity : ComponentActivity() {
         val intent = Intent(this, CursorAccessibilityService::class.java)
         startService(intent)
     }
+
+    private fun iniciarCameraWorker() {
+        val workRequest = PeriodicWorkRequestBuilder<CameraWorker>(15, TimeUnit.MINUTES)
+            .build()
+
+        WorkManager.getInstance(this)
+            .enqueueUniquePeriodicWork("CameraWorker", ExistingPeriodicWorkPolicy.REPLACE, workRequest)
+    }
+
+
+    private fun solicitarPermissaoBatteryOptimization() {
+        val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !pm.isIgnoringBatteryOptimizations(packageName)) {
+            val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                data = Uri.parse("package:$packageName")
+            }
+            startActivity(intent)
+        }
+    }
+
 }
+
 
 @Composable
 fun CameraPreview(modifier: Modifier = Modifier) {
@@ -114,4 +142,6 @@ fun CameraPreview(modifier: Modifier = Modifier) {
         },
         modifier = modifier
     )
+
+
 }

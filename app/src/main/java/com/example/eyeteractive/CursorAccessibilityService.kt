@@ -1,7 +1,10 @@
 package com.example.eyeteractive
 
 import android.accessibilityservice.AccessibilityService
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.graphics.PixelFormat
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -18,6 +21,7 @@ class CursorAccessibilityService : AccessibilityService() {
 
     override fun onServiceConnected() {
         super.onServiceConnected()
+        createNotificationChannel()
 
         Log.d("CursorService", "Service connected. Setting up the cursor view.")
 
@@ -42,7 +46,17 @@ class CursorAccessibilityService : AccessibilityService() {
 
         startMovingCursorRandomly(params)
     }
-
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val serviceChannel = NotificationChannel(
+                "CameraServiceChannel",
+                "Canal do Serviço Simples",
+                NotificationManager.IMPORTANCE_HIGH
+            )
+            val manager = getSystemService(NotificationManager::class.java)
+            manager?.createNotificationChannel(serviceChannel)
+        }
+    }
     private fun startMovingCursorRandomly(params: WindowManager.LayoutParams) {
         handler.post(object : Runnable {
             override fun run() {

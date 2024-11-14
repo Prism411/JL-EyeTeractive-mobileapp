@@ -6,7 +6,6 @@
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
     <uses-feature android:name="android.hardware.camera" android:required="true" />
     <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
@@ -51,8 +50,9 @@
         </service>
 
         <service
-            android:name=".CameraBackgroundService"
+            android:name=".CameraForegroundService"
             android:foregroundServiceType="camera"
+            android:permission="android.permission.FOREGROUND_SERVICE"
             android:exported="false" />
 
     </application>

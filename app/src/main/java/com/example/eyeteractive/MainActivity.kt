@@ -43,7 +43,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        iniciarCameraWorker()
+        //iniciarCameraWorker()
+        //iniciarCameraService()
         // Verifica se a permissão de sobreposição foi concedida
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
             val intent = Intent(
@@ -63,6 +64,11 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    private fun iniciarCameraService() {
+        val intent = Intent(this, CameraForegroundService::class.java)
+        ContextCompat.startForegroundService(this, intent)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
